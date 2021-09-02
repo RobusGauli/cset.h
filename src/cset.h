@@ -315,7 +315,7 @@ typedef uint64_t cset__u64;
     cset__set_seed(cset, cset__DEFAULT_SEED);                                  \
     cset__set_size(cset, 0);                                                   \
     cset__set_comparator(cset, NULL);                                          \
-    cset__set_hash(cset, NULL); \
+    cset__set_hash(cset, NULL);                                                \
     cset_vector__init_with_cap(cset__vector_buckets_ref(cset),                 \
                                cset__INITIAL_CAP);                             \
     if (CSET__FORCE_INITIALIZE) {                                              \
@@ -355,7 +355,7 @@ static cset__u64 cset__hash2_callback(void *memptr, size_t size) {
 #define cset__contains_(cset, ref, value, flag)                                \
   do {                                                                         \
     ((cset)->v) = value;                                                       \
-    cset__u64 h1 = cset__h1hash(cset, ref, value); \
+    cset__u64 h1 = cset__h1hash(cset, ref, value);                             \
     size_t cap = cset__cap(cset);                                              \
     size_t iteration = 1;                                                      \
     size_t index = 0;                                                          \
@@ -365,8 +365,8 @@ static cset__u64 cset__hash2_callback(void *memptr, size_t size) {
       if ((iteration - 1) >= cset__cap(cset)) {                                \
         break;                                                                 \
       }                                                                        \
-      cset__u64 h2 = cset__h2hash(cset, ref, value); \
-      index = cset__double_hash_index(h1, h2, (iteration-1), cap); \
+      cset__u64 h2 = cset__h2hash(cset, ref, value);                           \
+      index = cset__double_hash_index(h1, h2, (iteration - 1), cap);           \
       iteration++;                                                             \
       if (cset__tombstone(cset__vector_buckets_ref(cset), index)) {            \
         continue;                                                              \
@@ -392,15 +392,16 @@ static cset__u64 cset__hash2_callback(void *memptr, size_t size) {
 
 #define cset__h2hash(cset, ref, value)                                         \
   (((cset)->customhasher))                                                     \
-      ? ((((cset)->customhasher))((ref), cset__hash2_callback))       \
+      ? ((((cset)->customhasher))((ref), cset__hash2_callback))                \
       : ((XXH64_h((ref), sizeof(value), cset__seed(cset))) | 1)
 
 #define cset__h1hash(cset, ref, value)                                         \
   (((cset)->customhasher))                                                     \
-      ? ((((cset)->customhasher))(ref, cset__hash1_callback))       \
+      ? ((((cset)->customhasher))(ref, cset__hash1_callback))                  \
       : (XXH64((ref), sizeof(value), (cset__seed(cset))))
 
-#define cset__double_hash_index(ha1, ha2, i, cap) (((ha1) + ((i) * (ha2))) % cap)
+#define cset__double_hash_index(ha1, ha2, i, cap)                              \
+  (((ha1) + ((i) * (ha2))) % cap)
 
 #define cset__add(cset, value)                                                 \
   do {                                                                         \
@@ -410,20 +411,20 @@ static cset__u64 cset__hash2_callback(void *memptr, size_t size) {
       cset__resize(cset, (cset__cap(cset) * 2));                               \
     }                                                                          \
     ((cset)->v) = value;                                                       \
-    cset__add_((cset), &((cset)->v), cset__vector_buckets_ref(cset),             \
+    cset__add_((cset), &((cset)->v), cset__vector_buckets_ref(cset),           \
                ((cset)->v));                                                   \
   } while (0)
 
 #define cset__add_(cset, ref, vector_ref, value)                               \
   do {                                                                         \
-    cset__u64 h1 = cset__h1hash(cset, ref, *ref);                            \
+    cset__u64 h1 = cset__h1hash(cset, ref, *ref);                              \
     bool found = false;                                                        \
     size_t iteration = 1;                                                      \
     size_t index;                                                              \
     size_t cap = cset_vector__cap(vector_ref);                                 \
     for (;;) {                                                                 \
-      cset__u64 h2 = cset__h2hash(cset, ref, *ref); \
-      index = cset__double_hash_index(h1, h2, (iteration - 1), cap); \
+      cset__u64 h2 = cset__h2hash(cset, ref, *ref);                            \
+      index = cset__double_hash_index(h1, h2, (iteration - 1), cap);           \
       iteration++;                                                             \
       if (cset__empty(vector_ref, index) ||                                    \
           cset__tombstone(vector_ref, index)) {                                \
@@ -475,10 +476,9 @@ static cset__u64 cset__hash2_callback(void *memptr, size_t size) {
     ((cset)->buckets) = ((cset)->temp_buckets);                                \
   } while (0)
 
-
 #define cset__remove_(cset, ref, value, vector_ref)                            \
   do {                                                                         \
-    cset__u64 h1 = cset__h1hash(cset, ref, value); \
+    cset__u64 h1 = cset__h1hash(cset, ref, value);                             \
     bool found = false;                                                        \
     size_t iteration = 1;                                                      \
     size_t index;                                                              \
@@ -486,8 +486,8 @@ static cset__u64 cset__hash2_callback(void *memptr, size_t size) {
     for (;;) {                                                                 \
       if (((iteration)-1) >= cap)                                              \
         break;                                                                 \
-      cset__u64 h2 = cset__h2hash(cset, ref, value); \
-      index = cset__double_hash_index(h1, h2, (iteration - 1), cap); \
+      cset__u64 h2 = cset__h2hash(cset, ref, value);                           \
+      index = cset__double_hash_index(h1, h2, (iteration - 1), cap);           \
       iteration++;                                                             \
       if (cset__tombstone(vector_ref, index)) {                                \
         continue;                                                              \
@@ -514,88 +514,105 @@ static cset__u64 cset__hash2_callback(void *memptr, size_t size) {
                   cset__vector_buckets_ref(cset));                             \
   } while (0)
 
-#define cset__clear(cset) \
-  do { \
-    cset__free(cset); \
+#define cset__clear(cset)                                                      \
+  do {                                                                         \
+    cset__free(cset);                                                          \
     cset_vector__init_with_cap(cset__vector_buckets_ref(cset),                 \
-                             cset__INITIAL_CAP);                             \
-    cset__set_size(cset, 0); \
-\
+                               cset__INITIAL_CAP);                             \
+    cset__set_size(cset, 0);                                                   \
+                                                                               \
     if (CSET__FORCE_INITIALIZE) {                                              \
       for (size_t i = 0; i < cset_vector__cap(cset__vector_buckets_ref(cset)); \
            i++) {                                                              \
         ((cset_vector__index(cset__vector_buckets_ref(cset), i))->pi) = 0;     \
       }                                                                        \
     }                                                                          \
-  } while(0)
+  } while (0)
 
 #define cset__free(cset) cset_vector__free(cset__vector_buckets_ref(cset))
 
-#define cset__intersect(cset_res, cset_a, cset_b) \
-  do { \
-      for (size_t i = 0; i < cset__cap(cset_a); i++) { \
-        int pi = cset__value_pi(cset_vector__index((cset__vector_buckets_ref(cset_a)), i));                  \
-        if (pi == 0 || pi == -1) {                                               \
-          continue;                                                              \
-        }                                                                        \
-        bool contains = false; \
-        cset__contains((cset_b), cset__value_elem((cset_vector__index(cset__vector_buckets_ref(cset_a), i))), (&contains)); \
-        if (contains) { \
-          cset__add(cset_res, cset__value_elem((cset_vector__index(cset__vector_buckets_ref(cset_a), i)))); \
-        } \
-      } \
-  } while(0)
-
-#define cset__union(cset_res, cset_a, cset_b) \
-  do { \
-    for (size_t i = 0; i < cset__cap(cset_a); i++) { \
-      int pi = cset__value_pi(cset_vector__index((cset__vector_buckets_ref(cset_a)), i));                  \
+#define cset__intersect(cset_res, cset_a, cset_b)                              \
+  do {                                                                         \
+    for (size_t i = 0; i < cset__cap(cset_a); i++) {                           \
+      int pi = cset__value_pi(                                                 \
+          cset_vector__index((cset__vector_buckets_ref(cset_a)), i));          \
       if (pi == 0 || pi == -1) {                                               \
         continue;                                                              \
       }                                                                        \
-        cset__add(cset_res, cset__value_elem((cset_vector__index(cset__vector_buckets_ref(cset_a), i)))); \
-    } \
-    for (size_t i = 0; i < cset__cap(cset_b); i++) { \
-      int pi = cset__value_pi(cset_vector__index((cset__vector_buckets_ref(cset_b)), i));                  \
+      bool contains = false;                                                   \
+      cset__contains((cset_b),                                                 \
+                     cset__value_elem((cset_vector__index(                     \
+                         cset__vector_buckets_ref(cset_a), i))),               \
+                     (&contains));                                             \
+      if (contains) {                                                          \
+        cset__add(cset_res, cset__value_elem((cset_vector__index(              \
+                                cset__vector_buckets_ref(cset_a), i))));       \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
+
+#define cset__union(cset_res, cset_a, cset_b)                                  \
+  do {                                                                         \
+    for (size_t i = 0; i < cset__cap(cset_a); i++) {                           \
+      int pi = cset__value_pi(                                                 \
+          cset_vector__index((cset__vector_buckets_ref(cset_a)), i));          \
       if (pi == 0 || pi == -1) {                                               \
         continue;                                                              \
       }                                                                        \
-        cset__add(cset_res, cset__value_elem((cset_vector__index(cset__vector_buckets_ref(cset_b), i)))); \
-    } \
-  } while(0)
-
-#define cset__is_disjoint(cset_a, cset_b, flag) \
-  do { \
-    (*(flag)) = true; \
-    for (size_t i = 0; i < cset__cap(cset_a); i++) { \
-      int pi = cset__value_pi(cset_vector__index((cset__vector_buckets_ref(cset_a)), i));                  \
+      cset__add(cset_res, cset__value_elem((cset_vector__index(                \
+                              cset__vector_buckets_ref(cset_a), i))));         \
+    }                                                                          \
+    for (size_t i = 0; i < cset__cap(cset_b); i++) {                           \
+      int pi = cset__value_pi(                                                 \
+          cset_vector__index((cset__vector_buckets_ref(cset_b)), i));          \
       if (pi == 0 || pi == -1) {                                               \
         continue;                                                              \
       }                                                                        \
-      bool cset__contains_ = false; \
-      cset__contains((cset_b), cset__value_elem((cset_vector__index(cset__vector_buckets_ref(cset_a), i))), (&cset__contains_)); \
-      if (cset__contains_) { \
-        (*(flag)) = false; \
-        break; \
-      } \
-    } \
-  } while(0)
+      cset__add(cset_res, cset__value_elem((cset_vector__index(                \
+                              cset__vector_buckets_ref(cset_b), i))));         \
+    }                                                                          \
+  } while (0)
 
-#define cset__difference(result, cset_a, cset_b) \
-  do { \
-    for (size_t i = 0; i < cset__cap(cset_a); i++) {\
-      int pi = cset__value_pi(cset_vector__index((cset__vector_buckets_ref(cset_a)), i));                  \
+#define cset__is_disjoint(cset_a, cset_b, flag)                                \
+  do {                                                                         \
+    (*(flag)) = true;                                                          \
+    for (size_t i = 0; i < cset__cap(cset_a); i++) {                           \
+      int pi = cset__value_pi(                                                 \
+          cset_vector__index((cset__vector_buckets_ref(cset_a)), i));          \
       if (pi == 0 || pi == -1) {                                               \
         continue;                                                              \
       }                                                                        \
-      bool cset__contains_ = false; \
-      cset__contains((cset_b), cset__value_elem((cset_vector__index(cset__vector_buckets_ref(cset_a), i))), (&cset__contains_)); \
-      if (!cset__contains_) { \
-        cset__add((result), cset__value_elem((cset_vector__index(cset__vector_buckets_ref(cset_a), i)))); \
-      } \
-    }\
-  } while(0)
+      bool cset__contains_ = false;                                            \
+      cset__contains((cset_b),                                                 \
+                     cset__value_elem((cset_vector__index(                     \
+                         cset__vector_buckets_ref(cset_a), i))),               \
+                     (&cset__contains_));                                      \
+      if (cset__contains_) {                                                   \
+        (*(flag)) = false;                                                     \
+        break;                                                                 \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
+#define cset__difference(result, cset_a, cset_b)                               \
+  do {                                                                         \
+    for (size_t i = 0; i < cset__cap(cset_a); i++) {                           \
+      int pi = cset__value_pi(                                                 \
+          cset_vector__index((cset__vector_buckets_ref(cset_a)), i));          \
+      if (pi == 0 || pi == -1) {                                               \
+        continue;                                                              \
+      }                                                                        \
+      bool cset__contains_ = false;                                            \
+      cset__contains((cset_b),                                                 \
+                     cset__value_elem((cset_vector__index(                     \
+                         cset__vector_buckets_ref(cset_a), i))),               \
+                     (&cset__contains_));                                      \
+      if (!cset__contains_) {                                                  \
+        cset__add((result), cset__value_elem((cset_vector__index(              \
+                                cset__vector_buckets_ref(cset_a), i))));       \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
 #define Cset_iterator(cset_type_)                                              \
   typedef struct cset_iterator_##cset_type_ {                                  \

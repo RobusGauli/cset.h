@@ -3,7 +3,6 @@
 
 #include "src/cset.h"
 
-
 void test__cset_init() {
   Cset(int) cset_int_t;
   cset_int_t cset_int;
@@ -35,7 +34,6 @@ void test__cset_add() {
   cset__free(&cset_int);
 }
 
-
 void test__cset_contains() {
   Cset(int) cset_int_t;
   cset_int_t cset_int;
@@ -57,7 +55,6 @@ void test__cset_contains() {
 
   assert(cset__size(&cset_int) == 2);
   cset__free(&cset_int);
-
 }
 
 void test__cset_iteration() {
@@ -74,8 +71,9 @@ void test__cset_iteration() {
   cset_iterator__init(&iterator, &cset_int);
 
   for (;;) {
-    if (cset_iterator__done(&iterator)) break;
-    int* buffer;
+    if (cset_iterator__done(&iterator))
+      break;
+    int *buffer;
     cset_iterator__next(&iterator, buffer);
 
     bool contains = false;
@@ -116,15 +114,15 @@ void test__cset_struct() {
 
   cset__init(&cset_node);
 
-  cset__add(&cset_node, ((Node){.x=4,.y=4}));
+  cset__add(&cset_node, ((Node){.x = 4, .y = 4}));
   assert(cset__size(&cset_node) == 1);
-  cset__add(&cset_node, ((Node){.x=5, .y=4}));
+  cset__add(&cset_node, ((Node){.x = 5, .y = 4}));
   assert(cset__size(&cset_node) == 2);
 
-  cset__add(&cset_node, ((Node){.x=5, .y=4}));
+  cset__add(&cset_node, ((Node){.x = 5, .y = 4}));
   assert(cset__size(&cset_node) == 2);
 
-  cset__add(&cset_node, ((Node){.x=5, .y=8}));
+  cset__add(&cset_node, ((Node){.x = 5, .y = 8}));
   assert(cset__size(&cset_node) == 3);
   cset__free(&cset_node);
 }
@@ -155,10 +153,11 @@ void test__cset_remove() {
 
   cset_iterator__init(&iterator, &cset_int);
 
-  for(;;) {
-    if (cset_iterator__done(&iterator)) break;
+  for (;;) {
+    if (cset_iterator__done(&iterator))
+      break;
 
-    int* value;
+    int *value;
     cset_iterator__next(&iterator, value);
     assert(*value == 10);
   }
@@ -180,8 +179,6 @@ void test__cset_resize() {
   cset__free(&cset_int);
 }
 
-
-
 void test__default_bytes_comparator() {
   Cset(int) cset_int_t;
 
@@ -191,7 +188,6 @@ void test__default_bytes_comparator() {
   cset__add(&cset_int, 45);
   cset__add(&cset_int, 46);
   cset__add(&cset_int, 67);
-
 
   bool contains = false;
   cset__contains(&cset_int, 45, &contains);
@@ -209,7 +205,7 @@ void test__default_bytes_comparator() {
 
   cset__remove(&cset_int, 46);
   cset__contains(&cset_int, 46, &contains);
-  assert(contains  == false);
+  assert(contains == false);
 
   assert(cset__size(&cset_int) == 2);
 
@@ -222,7 +218,7 @@ void test__default_bytes_comparator() {
   cset__remove(&cset_int, 67);
   assert(cset__size(&cset_int) == 0);
 
-  for(int i = 0; i < 2000; i++) {
+  for (int i = 0; i < 2000; i++) {
     cset__add(&cset_int, i);
   }
 
@@ -231,18 +227,16 @@ void test__default_bytes_comparator() {
   cset__free(&cset_int);
 }
 
-
-bool node_pointer_comparator(Node* self, Node* other) {
-  return (self -> x) == (other -> x);
+bool node_pointer_comparator(Node *self, Node *other) {
+  return (self->x) == (other->x);
 }
 
-
-bool custom_node_compare(Node* self, Node* other) {
-  return (self -> x) == (other -> x);
+bool custom_node_compare(Node *self, Node *other) {
+  return (self->x) == (other->x);
 }
 
-cset__u64 hash_node(Node* self,  cset__u64 (*hash)(void*, size_t)) {
-  return hash(&(self -> x), sizeof(self -> x));
+cset__u64 hash_node(Node *self, cset__u64 (*hash)(void *, size_t)) {
+  return hash(&(self->x), sizeof(self->x));
 }
 
 void test__custom_comparator() {
@@ -253,20 +247,18 @@ void test__custom_comparator() {
   cset__set_hash(&cset_node, hash_node);
   cset__set_comparator(&cset_node, custom_node_compare);
 
-  cset__add(&cset_node, ((Node){.x=4,.y=4}));
-  cset__add(&cset_node, ((Node){.x=4,.y=4}));
+  cset__add(&cset_node, ((Node){.x = 4, .y = 4}));
+  cset__add(&cset_node, ((Node){.x = 4, .y = 4}));
   assert(cset__size(&cset_node) == 1);
 
-
-  cset__add(&cset_node, ((Node){.x=1, .y=2}));
+  cset__add(&cset_node, ((Node){.x = 1, .y = 2}));
   assert(cset__size(&cset_node) == 2);
 
-  cset__remove(&cset_node, ((Node){.x=1, .y=45}));
+  cset__remove(&cset_node, ((Node){.x = 1, .y = 45}));
   assert(cset__size(&cset_node) == 1);
 
   cset__free(&cset_node);
 }
-
 
 void test__cset_clear() {
   Cset(int) cset_int_t;
@@ -306,7 +298,6 @@ void test__cset_intersection() {
   cset__add(&cset_int_b, 12);
   cset__add(&cset_int_b, 13);
   cset__add(&cset_int_b, 16);
-
 
   cset_int_t result;
 
@@ -388,7 +379,6 @@ void test__cset_disjoint() {
   cset__free(&cset_b);
 }
 
-
 void test__cset_difference() {
   Cset(int) cset_int_t;
 
@@ -408,7 +398,6 @@ void test__cset_difference() {
   cset__add(&cset_a, 45);
   cset__add(&cset_a, 46);
   cset__add(&cset_a, 58);
-
 
   cset__add(&cset_b, 12);
   cset__add(&cset_b, 11);
