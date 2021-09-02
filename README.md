@@ -63,7 +63,7 @@ clib install robusgauli/cset
 ### APIs
 * `cset__add(cset, value)`: *no return*
 Add element to set.
-    ```
+    ```c
     #include "cset.h"
 
     Cset(char) cset_char_t;
