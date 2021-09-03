@@ -10,7 +10,7 @@
 * Allows **Custom Hash** & **Custom Comparator**
 * Single header file to rule them all 🚀 🚀 🚀
 
-Go to this [blogpost](https://robus.dev/typesafe-generic-and-fastest-set-data-structure-in-c) for more information about Cset.
+Go to this [blogpost](https://robus.dev/typesafe-and-fast-as-fk-set-in-c) for more information and motivation for writing Set from scratch.
 
 ### Getting Started
 ```c
